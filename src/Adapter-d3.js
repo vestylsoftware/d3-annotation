@@ -131,7 +131,28 @@ export default function annotation() {
     }
     return annotation
   }
-
+  annotation.setTitle = function(s) {
+    if (collection) {
+      collection.setTitle(s);
+      collection.updateText(textWrap);
+      annotations = collection.annotations
+    }
+    return annotation
+  } 
+  annotation.getAnnotation = function() {
+    if (collection) {
+      return collection.annotations[0];
+    }
+    return null;
+  }
+  annotation.setLabel = function(s) {
+    if (collection) {
+      collection.setLabel(s);
+      collection.updateText(textWrap);
+      annotations = collection.annotations
+    }
+    return annotation
+  } 
   annotation.updatedAccessors = function() {
     collection.setPositionWithAccessors()
     annotations = collection.annotations
@@ -148,6 +169,7 @@ export default function annotation() {
     return annotation
   }
 
+ 
   annotation.textWrap = function(_) {
     if (!arguments.length) return textWrap
     textWrap = _

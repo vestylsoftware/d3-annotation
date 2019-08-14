@@ -471,6 +471,7 @@ export class d3NoteText extends Type {
   //TODO: add update text functionality
 
   drawText() {
+    console.log("DRAW TEXT");
     if (this.note) {
       newWithClass(this.note, [this.annotation], "g", "annotation-note-content")
 
@@ -492,6 +493,11 @@ export class d3NoteText extends Type {
       // smb - add close button
       newWithClass(noteContent, [this.annotation], "text", "annotation-note-close");
 
+
+      if (this.annotation.showEdit) {
+        newWithClass(noteContent, [this.annotation], "text", "annotation-note-edit");
+      }
+
       let titleBBox = { height: 0 }
       const label = this.a.select("text.annotation-note-label")
       const wrapLength =
@@ -511,9 +517,11 @@ export class d3NoteText extends Type {
         this.annotation.note && this.annotation.note.bgPadding ||
         this.typeSettings &&
         this.typeSettings.note &&
-        this.typeSettings.note.bgPadding
+        this.typeSettings.note.bgPadding;
 
-        // smb - added additional padding. 
+      // console.log("DO WE HAVE SHOWEDIT", this.annotation.showEdit); 
+      // smb - added additional padding. 
+
       let bgPaddingFinal = { top: 8, bottom: 8, left: 8, right: 28 }
       if (typeof bgPadding === "number") {
         bgPaddingFinal = {
@@ -546,6 +554,14 @@ export class d3NoteText extends Type {
       close.html('&#xf057;');
       close.attr('dx', bbox.width + 8);
       close.attr('dy', 8);
+
+      if (this.annotation.showEdit) {
+        let edit = this.a.select("text.annotation-note-edit");
+        edit.html('&#xf044;');
+        edit.attr('dx', bbox.width + 8);
+        edit.attr('dy', bbox.height );
+      }
+
 
       this.a
         .select("rect.annotation-note-bg")
@@ -687,7 +703,7 @@ const wrap = (text, width, wrapSplitter, lineHeight = 1.2) => {
         let s = "" + word;
         let cls = '';
         if (s.match(/\@/)) {
-          console.log("WORD",word);
+
           const a = s.split(/\@/);
           word = a[1];
           cls = a[0];
@@ -703,7 +719,7 @@ const wrap = (text, width, wrapSplitter, lineHeight = 1.2) => {
           .attr("x", 0)
           .attr("dy", lineHeight + "em")
           .text(word);
-        tspan.attr('class',cls); // smb - set class if parsed from the current word.
+        tspan.attr('class', cls); // smb - set class if parsed from the current word.
 
       }
     }

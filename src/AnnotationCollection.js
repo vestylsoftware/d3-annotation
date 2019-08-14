@@ -50,6 +50,16 @@ export default class AnnotationCollection {
       }
     })
   }
+  setTitle(s) {
+    this.annotations.forEach(a => {
+      a.note.title = s;
+    })
+  }
+  setLabel(s) {
+    this.annotations.forEach(a => {
+      a.note.label = s;
+    })
+  }
 
   updateText () {
     this.annotations.forEach(a => {

@@ -172,7 +172,8 @@ var Annotation = function () {
         note = _ref.note,
         disable = _ref.disable,
         id = _ref.id,
-        className = _ref.className;
+        className = _ref.className,
+        showEdit = _ref.showEdit;
     classCallCheck(this, Annotation);
 
     this._dx = nx !== undefined ? nx - x : dx;
@@ -191,6 +192,8 @@ var Annotation = function () {
     this.subject = subject || {};
 
     this.disable = disable || [];
+
+    this.showEdit = showEdit !== undefined ? showEdit : false;
   }
 
   createClass(Annotation, [{
@@ -417,6 +420,20 @@ var AnnotationCollection = function () {
         if (a.type && a.type.updateTextWrap) {
           a.type.updateTextWrap(textWrap);
         }
+      });
+    }
+  }, {
+    key: "setTitle",
+    value: function setTitle(s) {
+      this.annotations.forEach(function (a) {
+        a.note.title = s;
+      });
+    }
+  }, {
+    key: "setLabel",
+    value: function setLabel(s) {
+      this.annotations.forEach(function (a) {
+        a.note.label = s;
       });
     }
   }, {
@@ -3667,6 +3684,7 @@ var d3NoteText = function (_Type) {
   }, {
     key: "drawText",
     value: function drawText() {
+      console.log("DRAW TEXT");
       if (this.note) {
         newWithClass(this.note, [this.annotation], "g", "annotation-note-content");
 
@@ -3678,6 +3696,10 @@ var d3NoteText = function (_Type) {
         // smb - add close button
         newWithClass(noteContent, [this.annotation], "text", "annotation-note-close");
 
+        if (this.annotation.showEdit) {
+          newWithClass(noteContent, [this.annotation], "text", "annotation-note-edit");
+        }
+
         var titleBBox = { height: 0 };
         var label = this.a.select("text.annotation-note-label");
         var wrapLength = this.annotation.note && this.annotation.note.wrap || this.typeSettings && this.typeSettings.note && this.typeSettings.note.wrap || this.textWrap;
@@ -3686,7 +3708,9 @@ var d3NoteText = function (_Type) {
 
         var bgPadding = this.annotation.note && this.annotation.note.bgPadding || this.typeSettings && this.typeSettings.note && this.typeSettings.note.bgPadding;
 
+        // console.log("DO WE HAVE SHOWEDIT", this.annotation.showEdit); 
         // smb - added additional padding. 
+
         var bgPaddingFinal = { top: 8, bottom: 8, left: 8, right: 28 };
         if (typeof bgPadding === "number") {
           bgPaddingFinal = {
@@ -3719,6 +3743,13 @@ var d3NoteText = function (_Type) {
         close.html('&#xf057;');
         close.attr('dx', bbox.width + 8);
         close.attr('dy', 8);
+
+        if (this.annotation.showEdit) {
+          var edit = this.a.select("text.annotation-note-edit");
+          edit.html('&#xf044;');
+          edit.attr('dx', bbox.width + 8);
+          edit.attr('dy', bbox.height);
+        }
 
         this.a.select("rect.annotation-note-bg").attr("width", bbox.width + bgPaddingFinal.left + bgPaddingFinal.right).attr("height", bbox.height + bgPaddingFinal.top + bgPaddingFinal.bottom).attr("x", bbox.x - bgPaddingFinal.left).attr("y", -bgPaddingFinal.top).attr("fill", "white").attr("fill-opacity", 0);
       }
@@ -3856,7 +3887,7 @@ var wrap = function wrap(text, width, wrapSplitter) {
         var s = "" + word;
         var cls = '';
         if (s.match(/\@/)) {
-          console.log("WORD", word);
+
           var a = s.split(/\@/);
           word = a[1];
           cls = a[0];
@@ -3987,7 +4018,28 @@ function annotation() {
     }
     return annotation;
   };
-
+  annotation.setTitle = function (s) {
+    if (collection) {
+      collection.setTitle(s);
+      collection.updateText(textWrap);
+      annotations = collection.annotations;
+    }
+    return annotation;
+  };
+  annotation.getAnnotation = function () {
+    if (collection) {
+      return collection.annotations[0];
+    }
+    return null;
+  };
+  annotation.setLabel = function (s) {
+    if (collection) {
+      collection.setLabel(s);
+      collection.updateText(textWrap);
+      annotations = collection.annotations;
+    }
+    return annotation;
+  };
   annotation.updatedAccessors = function () {
     collection.setPositionWithAccessors();
     annotations = collection.annotations;
