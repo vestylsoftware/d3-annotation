@@ -1,3 +1,25 @@
+# Cloning and build notes
+** todo - need to recall how to fork from to vestylsoftare 
+
+1. after checking out:
+
+cd d3-annotation
+npm link # create a global link
+cd <working angular project>
+npm link d3-svg-annotation
+
+
+2. Watch for changes in dev tree
+cd d3-annotation
+npm watch
+
+3. Run the following as changes are needed
+*** THIS IS NO LONGER NEEDED _ added prepublish only to the watch dependencies in package.jason
+*** npm run prepublishOnly
+
+
+
+
 # d3-annotation
 
 Full documentation: [http://d3-annotation.susielu.com](http://d3-annotation.susielu.com)
