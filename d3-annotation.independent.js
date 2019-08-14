@@ -1711,6 +1711,9 @@ var d3NoteText = function (_Type) {
         newWithClass(noteContent, [this.annotation], "text", "annotation-note-label");
         newWithClass(noteContent, [this.annotation], "text", "annotation-note-title");
 
+        // smb - add close button
+        newWithClass(noteContent, [this.annotation], "text", "annotation-note-close");
+
         var titleBBox = { height: 0 };
         var label = this.a.select("text.annotation-note-label");
         var wrapLength = this.annotation.note && this.annotation.note.wrap || this.typeSettings && this.typeSettings.note && this.typeSettings.note.wrap || this.textWrap;
@@ -1719,7 +1722,8 @@ var d3NoteText = function (_Type) {
 
         var bgPadding = this.annotation.note && this.annotation.note.bgPadding || this.typeSettings && this.typeSettings.note && this.typeSettings.note.bgPadding;
 
-        var bgPaddingFinal = { top: 0, bottom: 0, left: 0, right: 0 };
+        // smb - added additional padding. 
+        var bgPaddingFinal = { top: 8, bottom: 8, left: 8, right: 28 };
         if (typeof bgPadding === "number") {
           bgPaddingFinal = {
             top: bgPadding,
@@ -1747,6 +1751,10 @@ var d3NoteText = function (_Type) {
         label.attr("fill", this.annotation.color);
 
         var bbox = this.getNoteBBox();
+        var close = this.a.select("text.annotation-note-close");
+        close.html('&#xf057;');
+        close.attr('dx', bbox.width + 8);
+        close.attr('dy', 8);
 
         this.a.select("rect.annotation-note-bg").attr("width", bbox.width + bgPaddingFinal.left + bgPaddingFinal.right).attr("height", bbox.height + bgPaddingFinal.top + bgPaddingFinal.bottom).attr("x", bbox.x - bgPaddingFinal.left).attr("y", -bgPaddingFinal.top).attr("fill", "white").attr("fill-opacity", 0);
       }
@@ -1879,7 +1887,19 @@ var wrap = function wrap(text, width, wrapSplitter) {
         line$$1.pop();
         tspan.text(line$$1.join(" "));
         line$$1 = [word];
+
+        // smb - support text links via @
+        var s = "" + word;
+        var cls = '';
+        if (s.match(/\@/)) {
+          console.log("WORD", word);
+          var a = s.split(/\@/);
+          word = a[1];
+          cls = a[0];
+        } else {}
+
         tspan = text.append("tspan").attr("x", 0).attr("dy", lineHeight + "em").text(word);
+        tspan.attr('class', cls); // smb - set class if parsed from the current word.
       }
     }
   });

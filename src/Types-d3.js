@@ -329,7 +329,7 @@ export class Type {
     this.a.attr(
       "class",
       `annotation ${this.className && this.className()} ${
-        this.editMode ? "editable" : ""
+      this.editMode ? "editable" : ""
       } ${this.annotation.className || ""}`
     )
   }
@@ -489,28 +489,32 @@ export class d3NoteText extends Type {
         "annotation-note-title"
       )
 
+      // smb - add close button
+      newWithClass(noteContent, [this.annotation], "text", "annotation-note-close");
+
       let titleBBox = { height: 0 }
       const label = this.a.select("text.annotation-note-label")
       const wrapLength =
         this.annotation.note && this.annotation.note.wrap ||
         this.typeSettings &&
-          this.typeSettings.note &&
-          this.typeSettings.note.wrap ||
+        this.typeSettings.note &&
+        this.typeSettings.note.wrap ||
         this.textWrap
 
       const wrapSplitter =
         this.annotation.note && this.annotation.note.wrapSplitter ||
         this.typeSettings &&
-          this.typeSettings.note &&
-          this.typeSettings.note.wrapSplitter
+        this.typeSettings.note &&
+        this.typeSettings.note.wrapSplitter
 
       let bgPadding =
         this.annotation.note && this.annotation.note.bgPadding ||
         this.typeSettings &&
-          this.typeSettings.note &&
-          this.typeSettings.note.bgPadding
+        this.typeSettings.note &&
+        this.typeSettings.note.bgPadding
 
-      let bgPaddingFinal = { top: 0, bottom: 0, left: 0, right: 0 }
+        // smb - added additional padding. 
+      let bgPaddingFinal = { top: 8, bottom: 8, left: 8, right: 28 }
       if (typeof bgPadding === "number") {
         bgPaddingFinal = {
           top: bgPadding,
@@ -538,6 +542,10 @@ export class d3NoteText extends Type {
       label.attr("fill", this.annotation.color)
 
       const bbox = this.getNoteBBox()
+      let close = this.a.select("text.annotation-note-close");
+      close.html('&#xf057;');
+      close.attr('dx', bbox.width + 8);
+      close.attr('dy', 8);
 
       this.a
         .select("rect.annotation-note-bg")
@@ -652,7 +660,7 @@ const addHandlers = (dispatcher, annotation, { component, name }) => {
 
 //Text wrapping code adapted from Mike Bostock
 const wrap = (text, width, wrapSplitter, lineHeight = 1.2) => {
-  text.each(function() {
+  text.each(function () {
     const text = select(this),
       words = text
         .text()
@@ -674,11 +682,29 @@ const wrap = (text, width, wrapSplitter, lineHeight = 1.2) => {
         line.pop()
         tspan.text(line.join(" "))
         line = [word]
+
+        // smb - support text links via @
+        let s = "" + word;
+        let cls = '';
+        if (s.match(/\@/)) {
+          console.log("WORD",word);
+          const a = s.split(/\@/);
+          word = a[1];
+          cls = a[0];
+
+        }
+        else {
+
+        }
+
+
         tspan = text
           .append("tspan")
           .attr("x", 0)
           .attr("dy", lineHeight + "em")
-          .text(word)
+          .text(word);
+        tspan.attr('class',cls); // smb - set class if parsed from the current word.
+
       }
     }
   })

@@ -1929,7 +1929,7 @@ Path.prototype = path.prototype = {
           }
   },
   arc: function arc(x, y, r, a0, a1, ccw) {
-    x = +x, y = +y, r = +r;
+    x = +x, y = +y, r = +r, ccw = !!ccw;
     var dx = r * Math.cos(a0),
         dy = r * Math.sin(a0),
         x0 = x + dx,
@@ -3675,6 +3675,9 @@ var d3NoteText = function (_Type) {
         newWithClass(noteContent, [this.annotation], "text", "annotation-note-label");
         newWithClass(noteContent, [this.annotation], "text", "annotation-note-title");
 
+        // smb - add close button
+        newWithClass(noteContent, [this.annotation], "text", "annotation-note-close");
+
         var titleBBox = { height: 0 };
         var label = this.a.select("text.annotation-note-label");
         var wrapLength = this.annotation.note && this.annotation.note.wrap || this.typeSettings && this.typeSettings.note && this.typeSettings.note.wrap || this.textWrap;
@@ -3683,7 +3686,8 @@ var d3NoteText = function (_Type) {
 
         var bgPadding = this.annotation.note && this.annotation.note.bgPadding || this.typeSettings && this.typeSettings.note && this.typeSettings.note.bgPadding;
 
-        var bgPaddingFinal = { top: 0, bottom: 0, left: 0, right: 0 };
+        // smb - added additional padding. 
+        var bgPaddingFinal = { top: 8, bottom: 8, left: 8, right: 28 };
         if (typeof bgPadding === "number") {
           bgPaddingFinal = {
             top: bgPadding,
@@ -3711,6 +3715,10 @@ var d3NoteText = function (_Type) {
         label.attr("fill", this.annotation.color);
 
         var bbox = this.getNoteBBox();
+        var close = this.a.select("text.annotation-note-close");
+        close.html('&#xf057;');
+        close.attr('dx', bbox.width + 8);
+        close.attr('dy', 8);
 
         this.a.select("rect.annotation-note-bg").attr("width", bbox.width + bgPaddingFinal.left + bgPaddingFinal.right).attr("height", bbox.height + bgPaddingFinal.top + bgPaddingFinal.bottom).attr("x", bbox.x - bgPaddingFinal.left).attr("y", -bgPaddingFinal.top).attr("fill", "white").attr("fill-opacity", 0);
       }
@@ -3843,7 +3851,19 @@ var wrap = function wrap(text, width, wrapSplitter) {
         line.pop();
         tspan.text(line.join(" "));
         line = [word];
+
+        // smb - support text links via @
+        var s = "" + word;
+        var cls = '';
+        if (s.match(/\@/)) {
+          console.log("WORD", word);
+          var a = s.split(/\@/);
+          word = a[1];
+          cls = a[0];
+        } else {}
+
         tspan = text.append("tspan").attr("x", 0).attr("dy", lineHeight + "em").text(word);
+        tspan.attr('class', cls); // smb - set class if parsed from the current word.
       }
     }
   });
@@ -3868,99 +3888,6 @@ var bboxWithoutHandles = function bboxWithoutHandles(selection$$1) {
   }, { x: 0, y: 0, width: 0, height: 0 });
 };
 
-var noop$2 = { value: function value() {} };
-
-function dispatch$2() {
-  for (var i = 0, n = arguments.length, _ = {}, t; i < n; ++i) {
-    if (!(t = arguments[i] + "") || t in _) throw new Error("illegal type: " + t);
-    _[t] = [];
-  }
-  return new Dispatch$1(_);
-}
-
-function Dispatch$1(_) {
-  this._ = _;
-}
-
-function parseTypenames$2(typenames, types) {
-  return typenames.trim().split(/^|\s+/).map(function (t) {
-    var name = "",
-        i = t.indexOf(".");
-    if (i >= 0) name = t.slice(i + 1), t = t.slice(0, i);
-    if (t && !types.hasOwnProperty(t)) throw new Error("unknown type: " + t);
-    return { type: t, name: name };
-  });
-}
-
-Dispatch$1.prototype = dispatch$2.prototype = {
-  constructor: Dispatch$1,
-  on: function on(typename, callback) {
-    var _ = this._,
-        T = parseTypenames$2(typename + "", _),
-        t,
-        i = -1,
-        n = T.length;
-
-    // If no callback was specified, return the callback of the given type and name.
-    if (arguments.length < 2) {
-      while (++i < n) {
-        if ((t = (typename = T[i]).type) && (t = get$2(_[t], typename.name))) return t;
-      }return;
-    }
-
-    // If a type was specified, set the callback for the given type and name.
-    // Otherwise, if a null callback was specified, remove callbacks of the given name.
-    if (callback != null && typeof callback !== "function") throw new Error("invalid callback: " + callback);
-    while (++i < n) {
-      if (t = (typename = T[i]).type) _[t] = set$2(_[t], typename.name, callback);else if (callback == null) for (t in _) {
-        _[t] = set$2(_[t], typename.name, null);
-      }
-    }
-
-    return this;
-  },
-  copy: function copy() {
-    var copy = {},
-        _ = this._;
-    for (var t in _) {
-      copy[t] = _[t].slice();
-    }return new Dispatch$1(copy);
-  },
-  call: function call(type, that) {
-    if ((n = arguments.length - 2) > 0) for (var args = new Array(n), i = 0, n, t; i < n; ++i) {
-      args[i] = arguments[i + 2];
-    }if (!this._.hasOwnProperty(type)) throw new Error("unknown type: " + type);
-    for (t = this._[type], i = 0, n = t.length; i < n; ++i) {
-      t[i].value.apply(that, args);
-    }
-  },
-  apply: function apply(type, that, args) {
-    if (!this._.hasOwnProperty(type)) throw new Error("unknown type: " + type);
-    for (var t = this._[type], i = 0, n = t.length; i < n; ++i) {
-      t[i].value.apply(that, args);
-    }
-  }
-};
-
-function get$2(type, name) {
-  for (var i = 0, n = type.length, c; i < n; ++i) {
-    if ((c = type[i]).name === name) {
-      return c.value;
-    }
-  }
-}
-
-function set$2(type, name, callback) {
-  for (var i = 0, n = type.length; i < n; ++i) {
-    if (type[i].name === name) {
-      type[i] = noop$2, type = type.slice(0, i).concat(type.slice(i + 1));
-      break;
-    }
-  }
-  if (callback != null) type.push({ name: name, value: callback });
-  return type;
-}
-
 function annotation() {
   var annotations = [],
       collection = void 0,
@@ -3974,7 +3901,7 @@ function annotation() {
       type = d3Callout,
       textWrap = void 0,
       notePadding = void 0,
-      annotationDispatcher = dispatch$2("subjectover", "subjectout", "subjectclick", "connectorover", "connectorout", "connectorclick", "noteover", "noteout", "noteclick", "dragend", "dragstart"),
+      annotationDispatcher = dispatch("subjectover", "subjectout", "subjectclick", "connectorover", "connectorout", "connectorclick", "noteover", "noteout", "noteclick", "dragend", "dragstart"),
       sel = void 0;
 
   var annotation = function annotation(selection$$1) {
